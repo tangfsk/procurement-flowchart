@@ -542,7 +542,7 @@ steps.forEach((step, idx) => {
 
 function buildNode(step) {
   const node = document.createElement('div');
-  node.className = 'node';
+  node.className = 'node type-' + step.type;
   node.dataset.detail = step.detail;
   node.dataset.label = step.label.replace('\n', ' / ');
 
