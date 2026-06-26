@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>標準採購流程圖</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f1923;
+    font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    min-height: 100vh;
+    color: #e0e8f0;
+  }
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #4fc3f7;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: #607d8b;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+  }
+
+  .flowchart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+  }
+
+  .node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+    height: 72px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.4;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .node span.num {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-bottom: 2px;
+    font-weight: 400;
+  }
+
+  /* 類型顏色 */
+  .type-start .node   { background: #1a3a2a; border-color: #4caf50; color: #a5d6a7; }
+  .type-process .node { background: #1a2a3a; border-color: #2196f3; color: #90caf9; }
+  .type-decision .node { background: #2a2a1a; border-color: #ff9800; color: #ffcc80; }
+  .type-end .node     { background: #3a1a1a; border-color: #f44336; color: #ef9a9a; }
+  .type-approval .node { background: #2a1a3a; border-color: #9c27b0; color: #ce93d8; }
+
+  .node:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+
+  /* 菱形決策框 */
+  .type-decision .node {
+    width: 120px;
+    height: 120px;
+    transform: rotate(45deg);
+    border-radius: 8px;
+  }
+  .type-decision .node .inner {
+    transform: rotate(-45deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+  .type-decision .node:hover { transform: rotate(45deg) scale(1.08); }
+
+  /* 箭頭 */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 36px;
+    position: relative;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 22px;
+    background: linear-gradient(to bottom, #4fc3f7, #29b6f6);
+    position: relative;
+  }
+  .arrow-line::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #29b6f6;
+  }
+
+  /* 分支區域 */
+  .branch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 60px;
+    position: relative;
+  }
+
+  .branch-arrow-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .branch-label {
+    font-size: 0.75rem;
+    color: #80deea;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  /* 匯合 */
+  .merge-row {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+  }
+  .merge-line {
+    height: 2px;
+    background: #29b6f6;
+    position: relative;
+    top: 0;
+  }
+
+  /* 圖例 */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 36px;
+    justify-content: center;
+    padding: 14px 24px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #90a4ae;
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 2px solid;
+  }
+
+  /* tooltip */
+  .tooltip {
+    position: fixed;
+    background: #1e2d3d;
+    border: 1px solid #4fc3f7;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: #cfd8dc;
+    max-width: 220px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+    line-height: 1.5;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .tooltip.show { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .node { width: 130px; height: 60px; font-size: 0.78rem; }
+    .type-decision .node { width: 90px; height: 90px; }
+    .branch-row { gap: 30px; }
+    .branch-arrow-group { margin-top: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>📦 標準採購流程圖</h1>
+<div class="subtitle">STANDARD PROCUREMENT PROCESS</div>
+
+<div class="flowchart" id="chart">
+
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#1a3a2a;border-color:#4caf50"></div>
+    開始/結束
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#1a2a3a;border-color:#2196f3"></div>
+    一般流程
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#2a1a3a;border-color:#9c27b0"></div>
+    審批節點
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#2a2a1a;border-color:#ff9800;transform:rotate(45deg);border-radius:3px;width:10px;height:10px"></div>
+    決策判斷
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#3a1a1a;border-color:#f44336"></div>
+    結束終點
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const steps = [
+  { id: 1,  type: 'start',     label: '開始採購', icon: '▶', iconChar: true,
+    detail: '由需求部門或管理層發起採購需求，確定採購目的與範圍。' },
+  { id: 2,  type: 'process',   label: '識別需求\n& 規格制訂', icon: '🔍',
+    detail: '明確採購品項、數量、規格、質量要求及交付時間。' },
+  { id: 3,  type: 'process',   label: '編寫採購\n申請單', icon: '📋',
+    detail: '填寫採購申請表（PR），列明物品、數量、預算、用途等。' },
+  { id: 4,  type: 'approval',  label: '主管審批', icon: '✅',
+    detail: '直屬主管審核需求合理性、預算是否符合計劃。' },
+  { id: 5,  type: 'decision',  label: '預算\n充足？', icon: '❓', diamond: true,
+    detail: '判斷申請金額是否在預算範圍內，決定後續流程走向。' },
+  { id: 6,  type: 'process',   label: '尋找供應商\n& 報價', icon: '🏭',
+    detail: '向潛在供應商發出詢價（RFI/RFQ），收集報價與方案。' },
+  { id: 7,  type: 'process',   label: '供應商\n評估與篩選', icon: '📊',
+    detail: '比較價格、質量、交期、服務、資質等因素，評估候選供應商。' },
+  { id: 8,  type: 'decision',  label: '報價\n合適？', icon: '❓', diamond: true,
+    detail: '評估收到的報價是否滿足需求，決定是否重新洽談或接受。' },
+  { id: 9,  type: 'approval',  label: '管理層\n最終審批', icon: '👔',
+    detail: '高價值採購需管理層或財務審批，確認最終供應商與金額。' },
+  { id: 10, type: 'process',   label: '簽訂採購\n合同/訂單', icon: '✍',
+    detail: '與選定的供應商簽署採購訂單（PO）或正式採購合同。' },
+  { id: 11, type: 'process',   label: '跟進供應商\n備貨/生產', icon: '📦',
+    detail: '持續跟進訂單執行，監控生產進度或備貨情況。' },
+  { id: 12, type: 'process',   label: '發貨與\n物流運輸', icon: '🚚',
+    detail: '供應商安排發貨，選擇合適物流方式，跟蹤在途狀態。' },
+  { id: 13, type: 'process',   label: '收貨驗收\n& 質檢', icon: '🔎',
+    detail: '核對來貨與訂單是否一致，進行數量清點與質量檢驗。' },
+  { id: 14, type: 'decision',  label: '驗收\n合格？', icon: '❓', diamond: true,
+    detail: '檢驗結果是否符合質量標準，決定是否接受、退貨或索賠。' },
+  { id: 15, type: 'process',   label: '提交發票\n& 對帳', icon: '🧾',
+    detail: '收到供應商發票後，與訂單及驗收單進行核對確認。' },
+  { id: 16, type: 'approval',  label: '財務\n付款審批', icon: '💰',
+    detail: '財務部門審核發票，確認付款金額、條件與帳期。' },
+  { id: 17, type: 'process',   label: '銀行轉帳\n付款', icon: '🏦',
+    detail: '按約定帳期（預付/貨到/月結等）完成款項支付。' },
+  { id: 18, type: 'process',   label: '記錄歸檔\n& 效果評估', icon: '📁',
+    detail: '將所有採購文件歸檔，評估供應商表現與採購效益。' },
+  { id: 19, type: 'end',      label: '流程結束', icon: '■', iconChar: true,
+    detail: '採購流程圓滿完成，資料存入系統供日後查閱與審計。' },
+];
+
+const container = document.getElementById('chart');
+const tooltip = document.getElementById('tooltip');
+
+// 決策點分支
+const decisionBranches = {
+  5: [
+    { label: '✅ 是', target: 6 },
+    { label: '❌ 否 → 重新估算預算 / 調整需求 → 返回步驟 2', target: 2 },
+  ],
+  8: [
+    { label: '✅ 合適 → 進入審批', target: 9 },
+    { label: '❌ 重新洽談 → 返回供應商洽談', target: 6 },
+  ],
+  14: [
+    { label: '✅ 合格 → 繼續流程', target: 15 },
+    { label: '❌ 不合格 → 退貨/索賠 → 返回步驟 13', target: 13 },
+  ],
+};
+
+// 反饋箭頭標註
+const feedbackLoops = {
+  5: { from: 5, to: 2, label: '預算不足' },
+  8: { from: 8, to: 6, label: '重新洽談' },
+  14: { from: 14, to: 13, label: '退貨/索賠' },
+};
+
+let nodeMap = {};
+let rowCount = 0;
+
+function makeArrow() {
+  const a = document.createElement('div');
+  a.className = 'arrow';
+  const line = document.createElement('div');
+  line.className = 'arrow-line';
+  a.appendChild(line);
+  return a;
+}
+
+function makeBranchArrow(label, isYes) {
+  const g = document.createElement('div');
+  g.className = 'branch-arrow-group';
+  const lbl = document.createElement('div');
+  lbl.className = 'branch-label';
+  lbl.textContent = label;
+  lbl.style.color = isYes ? '#81c784' : '#ef9a9a';
+  const arr = document.createElement('div');
+  arr.className = 'arrow';
+  const line = document.createElement('div');
+  line.className = 'arrow-line';
+  arr.appendChild(line);
+  g.appendChild(lbl);
+  g.appendChild(arr);
+  return g;
+}
+
+steps.forEach((step, idx) => {
+  const isBranch = decisionBranches[step.id];
+
+  if (isBranch) {
+    // 分支行
+    const branchRow = document.createElement('div');
+    branchRow.className = 'branch-row';
+    branchRow.id = 'row-' + rowCount;
+
+    // 上方反饋弧線（來自其他決策節點的返回箭頭）
+    // 先畫上方小間距
+    container.appendChild(makeArrow());
+
+    step.branches = [];
+    step.branchEls = [];
+
+    const yesBranch = document.createElement('div');
+    yesBranch.style.display = 'flex';
+    yesBranch.style.flexDirection = 'column';
+    yesBranch.style.alignItems = 'center';
+    const noBranch = document.createElement('div');
+    noBranch.style.display = 'flex';
+    noBranch.style.flexDirection = 'column';
+    noBranch.style.alignItems = 'center';
+
+    const yesLabel = document.createElement('div');
+    yesLabel.className = 'branch-label';
+    yesLabel.style.color = '#81c784';
+    yesLabel.textContent = decisionBranches[step.id][0].label;
+
+    const noLabel = document.createElement('div');
+    noLabel.className = 'branch-label';
+    noLabel.style.color = '#ef9a9a';
+    noLabel.textContent = decisionBranches[step.id][1].label;
+
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = 'step-node';
+    nodeDiv.id = 'node-' + step.id;
+
+    const node = buildNode(step);
+    nodeDiv.appendChild(node);
+
+    yesBranch.appendChild(yesLabel);
+    yesBranch.appendChild(makeArrow());
+    yesBranch.appendChild(nodeDiv);
+
+    noBranch.appendChild(noLabel);
+    noBranch.appendChild(makeArrow());
+    noBranch.appendChild(makeArrow()); // 更多間距
+
+    branchRow.appendChild(yesBranch);
+    branchRow.appendChild(noBranch);
+    container.appendChild(branchRow);
+
+    nodeMap[step.id] = node;
+    step.nodeEl = nodeDiv;
+
+    rowCount++;
+
+    // 畫合併線（如果下一個不是結束）
+    if (idx < steps.length - 1 && !steps[idx+1].diamond) {
+      const nextStep = steps[idx+1];
+      // 水平連線
+      const mergeRow = document.createElement('div');
+      mergeRow.className = 'merge-row';
+      mergeRow.style.marginLeft = '80px';
+      const mergeLine = document.createElement('div');
+      mergeLine.style.height = '2px';
+      mergeLine.style.background = '#29b6f6';
+      mergeLine.style.width = '200px';
+      mergeLine.style.position = 'relative';
+      mergeLine.style.left = '-40px';
+      // 垂直上升線
+      const vLine = document.createElement('div');
+      vLine.style.width = '2px';
+      vLine.style.height = '20px';
+      vLine.style.background = '#29b6f6';
+      const hLine = document.createElement('div');
+      hLine.style.height = '2px';
+      hLine.style.background = '#29b6f6';
+      hLine.style.flexGrow = '1';
+      const upArr = document.createElement('div');
+      upArr.style.width = '2px';
+      upArr.style.height = '20px';
+      upArr.style.background = '#29b6f6';
+      upArr.style.position = 'relative';
+      upArr.style.left = '-40px';
+
+      const arrUp = document.createElement('div');
+      arrUp.style.position = 'relative';
+      arrUp.style.left = 'calc(-40px - 2px)';
+      const tri = document.createElement('div');
+      tri.style.position = 'absolute';
+      tri.style.top = '-6px';
+      tri.style.left = '-5px';
+      tri.style.borderLeft = '6px solid transparent';
+      tri.style.borderRight = '6px solid transparent';
+      tri.style.borderBottom = '8px solid #29b6f6';
+
+      // 只畫垂直向下箭頭 + 下一個節點
+      const connectorDiv = document.createElement('div');
+      connectorDiv.style.display = 'flex';
+      connectorDiv.style.flexDirection = 'column';
+      connectorDiv.style.alignItems = 'center';
+
+      // 從分支底部到下一節點（no分支向下走一段後折回）
+      const noConnector = document.createElement('div');
+      noConnector.style.display = 'flex';
+      noConnector.style.flexDirection = 'column';
+      noConnector.style.alignItems = 'center';
+
+      const noGap = document.createElement('div');
+      noGap.style.height = '30px';
+
+      // NO分支向下走到底，再返回右側
+      const vDown = document.createElement('div');
+      vDown.style.width = '2px';
+      vDown.style.height = '20px';
+      vDown.style.background = '#ef9a9a';
+
+      const hBack = document.createElement('div');
+      hBack.style.height = '2px';
+      hBack.style.width = '120px';
+      hBack.style.background = '#ef9a9a';
+
+      const vUp = document.createElement('div');
+      vUp.style.width = '2px';
+      vUp.style.height = '60px';
+      vUp.style.background = '#ef9a9a';
+      vUp.style.position = 'relative';
+      vUp.style.right = '120px';
+      vUp.style.top = '-60px';
+
+      const hRight = document.createElement('div');
+      hRight.style.height = '2px';
+      hRight.style.width = '60px';
+      hRight.style.background = '#ef9a9a';
+      hRight.style.position = 'relative';
+      hRight.style.top = '-62px';
+
+      // 實際上我們只需要在NO分支畫向下再向上的路徑
+      noConnector.appendChild(noGap);
+      noConnector.appendChild(makeArrow());
+
+      const noArrow = document.createElement('div');
+      noArrow.style.display = 'flex';
+      noArrow.style.alignItems = 'center';
+      const vP = document.createElement('div');
+      vP.style.width = '2px';
+      vP.style.height = '40px';
+      vP.style.background = '#ef9a9a';
+      const hP = document.createElement('div');
+      hP.style.height = '2px';
+      hP.style.width = '80px';
+      hP.style.background = '#ef9a9a';
+      const vP2 = document.createElement('div');
+      vP2.style.width = '2px';
+      vP2.style.height = '30px';
+      vP2.style.background = '#ef9a9a';
+      noArrow.appendChild(vP);
+      noArrow.appendChild(hP);
+      noArrow.appendChild(vP2);
+
+      const triUp = document.createElement('div');
+      triUp.style.borderLeft = '5px solid transparent';
+      triUp.style.borderRight = '5px solid transparent';
+      triUp.style.borderTop = '7px solid #ef9a9a';
+      triUp.style.marginTop = '2px';
+
+      noArrow.appendChild(triUp);
+      noConnector.appendChild(noArrow);
+
+      noBranch.appendChild(noConnector);
+
+      container.appendChild(makeArrow());
+    }
+
+  } else {
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'step';
+    stepDiv.id = 'step-' + step.id;
+
+    const node = buildNode(step);
+    stepDiv.appendChild(node);
+    nodeMap[step.id] = node;
+
+    container.appendChild(stepDiv);
+    container.appendChild(makeArrow());
+
+    // 如果是最後一步，移除最後的箭頭
+    if (idx === steps.length - 1) {
+      const last = container.lastChild;
+      if (last && last.classList.contains('arrow')) last.remove();
+    }
+  }
+});
+
+function buildNode(step) {
+  const node = document.createElement('div');
+  node.className = 'node';
+  node.dataset.detail = step.detail;
+  node.dataset.label = step.label.replace('\n', ' / ');
+
+  const iconSpan = document.createElement('span');
+  iconSpan.textContent = step.icon;
+
+  const labelDiv = document.createElement('div');
+  if (step.diamond) {
+    const inner = document.createElement('div');
+    inner.className = 'inner';
+    const lb = document.createElement('span');
+    lb.style.fontSize = '0.82rem';
+    lb.style.fontWeight = '700';
+    lb.style.whiteSpace = 'pre-line';
+    lb.textContent = step.label;
+    inner.appendChild(lb);
+    node.appendChild(inner);
+  } else {
+    const lb = document.createElement('span');
+    lb.style.whiteSpace = 'pre-line';
+    lb.textContent = step.label;
+    node.appendChild(lb);
+  }
+
+  node.style.position = 'relative';
+
+  node.addEventListener('mouseenter', (e) => {
+    tooltip.textContent = step.detail;
+    tooltip.classList.add('show');
+  });
+  node.addEventListener('mousemove', (e) => {
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+  });
+  node.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('show');
+  });
+
+  return node;
+}
+</script>
+</body>
+</html>
